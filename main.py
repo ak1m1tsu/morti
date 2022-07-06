@@ -76,12 +76,9 @@ def create_folders(parent, folder_id, service, console: Console):
     
     folders = [{ 'id': folder['id'], 'name': folder['name']} for folder in parent_folder['files']]
 
-    console.log(folders)
-
     for folder in os.listdir(os.path.abspath(parent)):
         if os.path.isfile(folder) or folder == config.OBSIDIAN_FOLDER or folder in folders:
             continue
-        console.log(folder)
 
         file_metadata = {
             'name' : folder,
@@ -99,10 +96,10 @@ def create_folders(parent, folder_id, service, console: Console):
                 drive_folder_id = drive_folder['files'][0]['id']
                 break
         
-        # if not drive_folder:
-        #     drive_folder = service.files().create(body=file_metadata).execute()
-        #     drive_folder_id = drive_folder.get('id')
-        #     console.print(f' [•] Created folder: {drive_folder["name"]}', style='bold green')
+        if not drive_folder:
+            drive_folder = service.files().create(body=file_metadata).execute()
+            drive_folder_id = drive_folder.get('id')
+            console.print(f' [•] Created folder: {drive_folder["name"]}', style='bold green')
 
         create_files(parent=parent, folder=folder, folder_id=drive_folder_id, service=service, console=console)
 
@@ -132,7 +129,7 @@ def main():
             q=f'name="{config.BACKUP_FOLDER}" and mimeType="{config.MIME_TYPE}"',
             spaces='drive'
         ).execute()
-        console.print(response)
+
         if not response['files']:
             file_metadata = {
                 'name' : config.BACKUP_FOLDER,
