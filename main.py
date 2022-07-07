@@ -48,11 +48,11 @@ def create_files(
 
     folder_path = os.path.abspath(f'{parent}/{folder}')
     folder_files = os.listdir(folder_path)
-    not_created_files: list[str] = [
-        item['name'] for item in response if item['name'] not in folder_files
+    existing_files: list[str] = [
+        item['name'] for item in response if item['name'] in folder_files
     ]
 
-    if not is_img_folder and config.IMG_FOLDER in not_created_files:
+    if not is_img_folder and config.IMG_FOLDER not in existing_files:
         img_folder_id = create_image_folder(
             folder=folder,
             folder_id=folder_id,
@@ -71,7 +71,7 @@ def create_files(
     for file in os.listdir(folder_path):
         file_path = f'{folder_path}/{file}'
 
-        if os.path.isdir(os.path.abspath(file_path)) or file not in not_created_files:
+        if os.path.isdir(os.path.abspath(file_path)) or file in existing_files:
             continue
 
         file_metadata = {
@@ -117,7 +117,7 @@ def create_folders(parent, folder_id, service, console: Console) -> None:
             'mimeType': config.MIME_TYPE,
             'parents': [folder_id]
         }
-
+        drive_folder = None
         for item in folders:
             if item['name'] == folder:
                 drive_folder = service.files().list(
@@ -128,7 +128,7 @@ def create_folders(parent, folder_id, service, console: Console) -> None:
                 drive_folder_id = drive_folder['files'][0]['id']
                 break
 
-        if not drive_folder:
+        if drive_folder is None:
             drive_folder = service.files().create(body=file_metadata).execute()
             drive_folder_id = drive_folder.get('id')
             console.print(
